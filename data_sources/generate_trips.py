@@ -9,9 +9,9 @@ fake = Faker('ar-EG')
 conn = psycopg2.connect(
     host='localhost',
     port=5432,
-    dbname='rides_hailing',
-    user='rh_user',
-    password='rh_pass'
+    dbname='postgres_database',
+    user='postgres_user',
+    password='postgres_pass'
 )
 cur = conn.cursor()
 
