@@ -16,9 +16,9 @@ services:
     container_name: rp_postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=rh_user
-      - POSTGRES_PASSWORD=rh_pass
-      - POSTGRES_DB=rides_hailing
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=postgres_pass
+      - POSTGRES_DB=postges_database
     ports:
       - '5432:5432'
     volumes:
@@ -26,7 +26,7 @@ services:
       - ./sql/init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
     networks: [pipeline_net]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rh_user -d rides_hailing"]
+      test: ["CMD-SHELL", "pg_isready -U postgres_user -d postgres_database"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=RidesP@123
+      - MSSQL_SA_PASSWORD=your_password_for_mssql
       - MSSQL_PID=Developer
     ports:
       - '1433:1433'
@@ -104,8 +104,8 @@ services:
         condition: service_healthy
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
-      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres_user:postgres_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=your_secret_key
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
     command: bash -c 'airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@ridehailing.eg'
     volumes:
@@ -124,8 +124,8 @@ services:
       - airflow-scheduler
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
-      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres_user:postgres_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=your_secret_key
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - _PIP_ADDITIONAL_REQUIREMENTS=pymongo==4.7.1 pyodbc==5.1.0 pandas==2.2.2 psycopg2-binary==2.9.9 kafka-python==2.0.2 dbt-sqlserver==1.8.7 dbt-core==1.8.9
     command: webserver
@@ -146,8 +146,8 @@ services:
       - airflow-init
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
-      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres_user:postgres_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=your_secret_key
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - _PIP_ADDITIONAL_REQUIREMENTS=pymongo==4.7.1 pyodbc==5.1.0 pandas==2.2.2 psycopg2-binary==2.9.9 kafka-python==2.0.2 dbt-sqlserver==1.8.7 dbt-core==1.8.9
     command: scheduler
