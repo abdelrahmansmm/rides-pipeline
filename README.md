@@ -5,14 +5,44 @@ for ride-hailing companies operating in Egypt (similar to Uber Egypt and inDrive
 The pipeline covers batch ingestion, real-time streaming, transformation, orchestration,
 and analytics dashboards.
 
----
 
 ## 🏗️ Architecture
-PostgreSQL (OLTP) ──────────────────────────────────────────────┐
-├──► MSSQL Staging ──► dbt ──► Gold Layer ──► Power BI
-MongoDB (Payments) ──► Airflow (Orchestrator) ──────────────────┘
-Driver App ──► Kafka ──► PySpark Streaming ──► MSSQL (Real-Time)──► Power BI
-
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         BATCH LANE (Nightly)                            │
+│                                                                         │
+│  ┌────────────┐                                                         │
+│  │ PostgreSQL │──┐                                                      │
+│  │  (Trips)   │  │    ┌─────────┐    ┌──────────┐    ┌─────────────┐  │
+│  └────────────┘  ├───►│ Airflow │───►│  MSSQL   │───►│     dbt     │  │
+│                  │    │  (DAG)  │    │ Staging  │    │(Transforms) │  │
+│  ┌────────────┐  │    └─────────┘    └──────────┘    └──────┬──────┘  │
+│  │  MongoDB   │──┘         │                                │          │
+│  │ (Payments) │            │         ┌──────────────────────▼──────┐   │
+│  └────────────┘            │         │      MSSQL Gold Layer       │   │
+│                            │         │  fct_trips │ dim_drivers    │   │
+│  ┌────────────┐            │         └──────────────────┬──────────┘   │
+│  │    SSIS    │────────────┘                            │              │
+│  │  (Manual)  │                                         │              │
+│  └────────────┘                                         │              │
+└─────────────────────────────────────────────────────────┼──────────────┘
+                                                          │
+┌─────────────────────────────────────────────────────────┼──────────────┐
+│                    STREAMING LANE (Real-Time)            │              │
+│                                                          │              │
+│  ┌────────────┐    ┌───────┐    ┌─────────┐    ┌───────▼──────────┐   │
+│  │ Driver App │───►│ Kafka │───►│ PySpark │───►│  MSSQL           │   │
+│  │ Simulator  │    │Topics │    │Streaming│    │  streaming_      │   │
+│  └────────────┘    └───────┘    └─────────┘    │  trip_agg        │   │
+│                                                 └───────┬──────────┘   │
+└─────────────────────────────────────────────────────────┼──────────────┘
+                                                          │
+                                                 ┌────────▼────────┐
+                                                 │    Power BI     │
+                                                 │   Dashboards    │
+                                                 │  (4 Pages)      │
+                                                 └─────────────────┘
+```
 ### Two Lanes:
 - **Batch Lane:** Airflow orchestrates nightly extraction from PostgreSQL and MongoDB
   → MSSQL staging → dbt transforms → Gold layer
@@ -40,6 +70,7 @@ Driver App ──► Kafka ──► PySpark Streaming ──► MSSQL (Real-Tim
 ---
 
 ## 📁 Project Structure
+```
 rides-pipeline/
 ├── docker-compose.yml              # All infrastructure services
 ├── .env                            # Secrets (never committed)
@@ -82,8 +113,7 @@ rides-pipeline/
 │   └── streaming_job.py            # PySpark Kafka → MSSQL streaming
 │
 └── mongo_data/                     # MongoDB bind mount (auto-created)
-
----
+```
 
 ## ⚙️ Prerequisites
 
@@ -98,12 +128,11 @@ rides-pipeline/
 - ODBC Driver 18 for SQL Server
 - dbt-sqlserver
 
----
-
 ## 🚀 Setup & Execution Order
 
 ### 1. Clone the Repository
-```bash
+```
+bash
 git clone https://github.com/abdelrahmansmm/rides-pipeline.git
 cd rides-pipeline
 ```
@@ -170,11 +199,13 @@ com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11 \
 ```
 
 ### 12. Connect Power BI
+```
 Open Power BI Desktop
 → Get Data → SQL Server
 → Server: localhost,1433
 → Database: RidesHailingDW
 → Load: gold.fct_trips, gold.dim_drivers, dbo.streaming_trip_agg
+```
 ---
 
 ## 📊 Power BI Dashboard Pages
@@ -191,6 +222,7 @@ Open Power BI Desktop
 ## 🗄️ Data Model
 
 ### Star Schema (Gold Layer)
+```
 fct_trips (50,000 rows)
 ├── driver_id → dim_drivers
 ├── pickup_zone_id
@@ -204,20 +236,7 @@ streaming_trip_agg (real-time)
 ├── window_start, window_end (5-min tumbling windows)
 ├── zone_id
 └── trip_count, total_revenue_egp...
-
----
-
-## 🔧 Service URLs
-
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Airflow UI | http://localhost:8080 | admin / admin |
-| Spark Master UI | http://localhost:8181 | No auth |
-| PostgreSQL | localhost:5432 | postgres_user / postgres_pass |
-| MongoDB | localhost:27017 | No auth |
-| MS SQL Server | localhost:1433 | sa / your_password_for_mssql |
-| Kafka | localhost:29092 | No auth |
-
+```
 ---
 
 ## 📝 License
