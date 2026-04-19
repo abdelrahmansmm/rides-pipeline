@@ -10,8 +10,8 @@ pg = psycopg2.connect(
     host="localhost",
     port=5432,
     dbname="rides_hailing",
-    user="rh_user",
-    password="rh_pass"
+    user="postgres_user",
+    password="postgres_pass"
 )
 print("Connected to PostgreSQL")
 
@@ -64,9 +64,9 @@ print(f"Extracted {len(df_trips)} trips and {len(df_drivers)} drivers from Postg
 mssql = pyodbc.connect(
     "DRIVER={ODBC Driver 18 for SQL Server};"
     "SERVER=localhost,1433;"
-    "DATABASE=RidesHailingDW;"
+    "DATABASE=MSSQL_DATABASE;"
     "UID=sa;"
-    "PWD=RidesP@123;"
+    "PWD=your_password_for_mssql;"
     "TrustServerCertificate=yes"
 )
 cur = mssql.cursor()
