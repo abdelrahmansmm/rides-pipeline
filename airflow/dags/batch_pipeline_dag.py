@@ -38,6 +38,7 @@ with DAG (
         )
         col = mongo['payments']['payment_records']
 
+        # First run -> Remove condition
         since = datetime.utcnow() - timedelta(hours=24)
         docs = list(col.find({'created_at': {'$gte': since}}))
         logging.info(f"Fetched {len(docs)} payment records.")
@@ -49,9 +50,9 @@ with DAG (
         conn = pyodbc.connect(
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=mssql,1433;'
-            'DATABASE=RidesHailingDW;'
+            'DATABASE=MSSQL_DATABASE;'
             'UID=sa;'
-            'PWD=RidesP@123;'
+            'PWD=your_password_for_mssql;'
             'TrustServerCertificate=yes'
         )
         cur = conn.cursor()
@@ -91,9 +92,9 @@ with DAG (
         pg = psycopg2.connect(
             host='postgres',
             port=5432,
-            dbname='rides_hailing',
-            user='rh_user',
-            password='rh_pass'
+            dbname='postgres_database',
+            user='postgres_user',
+            password='postgres_pass'
         )
 
         df_trips = pd.read_sql('''
@@ -114,7 +115,7 @@ with DAG (
             JOIN zones pz ON t.pickup_zone_id  = pz.zone_id
             JOIN zones dz ON t.dropoff_zone_id = dz.zone_id
             WHERE t.requested_at >= NOW() - INTERVAL '24 hours'
-            ''', pg)
+            ''', pg) # Remove WHERE clause in first run
         
         df_drivers = pd.read_sql('''
             SELECT
@@ -132,9 +133,9 @@ with DAG (
         conn = pyodbc.connect(
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=mssql,1433;'
-            'DATABASE=RidesHailingDW;'
+            'DATABASE=MSSQL_DATABASE;'
             'UID=sa;'
-            'PWD=RidesP@123;'
+            'PWD=your_password_for_mssql;'
             'TrustServerCertificate=yes'
         )
         cur = conn.cursor()
@@ -207,9 +208,9 @@ with DAG (
         conn = pyodbc.connect(
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=mssql,1433;'
-            'DATABASE=RidesHailingDW;'
+            'DATABASE=MSSQL_DATABASE;'
             'UID=sa;'
-            'PWD=RidesP@123;'
+            'PWD=your_password_for_mssql;'
             'TrustServerCertificate=yes'
         )
         cur = conn.cursor()
