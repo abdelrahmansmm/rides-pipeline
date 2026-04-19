@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: staging
     schema: staging
-    database: RidesHailingDW
+    database: MSSQL_DATABASE
     tables:
       - name: stg_trips
       - name: stg_drivers
