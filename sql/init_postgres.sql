@@ -1,6 +1,6 @@
 CREATE DATABASE airflow_meta;
 
-\connect rides_hailing;
+\connect postgres_database;
 
 
 CREATE TYPE trip_status AS ENUM
