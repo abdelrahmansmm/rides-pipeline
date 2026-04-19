@@ -131,8 +131,7 @@ rides-pipeline/
 ## 🚀 Setup & Execution Order
 
 ### 1. Clone the Repository
-```
-bash
+```bash
 git clone https://github.com/abdelrahmansmm/rides-pipeline.git
 cd rides-pipeline
 ```
@@ -173,23 +172,30 @@ python data_sources/generate_trips.py
 python data_sources/generate_payments.py
 ```
 
-### 8. Start Kafka Producer
+### 8. Run SSIS Package (Windows - Manual Demo)
+```
+Open Visual Studio → RideHaulingETL.dtsx → Press F5
+```
+
+### 9. Start Kafka Producer
 ```bash
 nohup python data_sources/kafka_producer.py > logs/kafka_producer.log 2>&1 &
 ```
 
-### 9. Trigger Airflow DAG
+### 10. Trigger Airflow DAG
+```
 Toggle rh_batch_pipeline ON
 → Click Trigger DAG
+```
 
-### 10. Run dbt (also triggered by Airflow)
+### 11. Run dbt (also triggered by Airflow)
 ```bash
 cd rh_dbt
 dbt run
 dbt test
 ```
 
-### 11. Start PySpark Streaming Job
+### 12. Start PySpark Streaming Job
 ```bash
 docker exec -it rp_spark_master /opt/spark/bin/spark-submit \
   --master spark://spark-master:7077 \
@@ -198,7 +204,7 @@ com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11 \
   /opt/spark/work-dir/streaming_job.py
 ```
 
-### 12. Connect Power BI
+### 13. Connect Power BI
 ```
 Open Power BI Desktop
 → Get Data → SQL Server
