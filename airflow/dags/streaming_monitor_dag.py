@@ -62,9 +62,9 @@ with DAG(
         conn = pyodbc.connect(
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=mssql,1433;'
-            'DATABASE=RidesHailingDW;'
+            'DATABASE=MSSQL_DATABASE;'
             'UID=sa;'
-            'PWD=RidesP@123;'
+            'PWD=your_password_for_mssql;'
             'TrustServerCertificate=yes'
         )
         cur = conn.cursor()
@@ -138,9 +138,9 @@ with DAG(
         conn = pyodbc.connect(
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=mssql,1433;'
-            'DATABASE=RidesHailingDW;'
+            'DATABASE=MSSQL_DATABASE;'
             'UID=sa;'
-            'PWD=RidesP@123;'
+            'PWD=your_password_for_mssql;'
             'TrustServerCertificate=yes'
         )
         cur = conn.cursor()
