@@ -1,3 +1,5 @@
+# This script use it in SSIS in Execute Process
+
 import psycopg2
 import pyodbc
 import pandas as pd
