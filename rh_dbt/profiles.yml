@@ -1,10 +1,10 @@
 rh_dbt:
   outputs:
     dev:
-      database: RidesHailingDW
+      database: MSSQL_DATABASE
       schema: dbo
       host: mssql
-      password: RidesP@123
+      password: your_password_for_mssql
       port: 1433
       threads: 4
       type: sqlserver
@@ -12,16 +12,4 @@ rh_dbt:
       user: sa
       encrypt: false
       trust_cert: true
-  target: dev
-traffic_dbt:
-  outputs:
-    dev:
-      dbname: traffic_db
-      host: localhost
-      password: traffic
-      port: 5432
-      schema: public
-      threads: 1
-      type: postgres
-      user: traffic
   target: dev
