@@ -69,10 +69,10 @@ agg_stream = parsed \
     )
 
 # Write to MS SQL Server
-MSSQL_URL = 'jdbc:sqlserver://mssql:1433;databaseName=RidesHailingDW;encrypt=false'
+MSSQL_URL = 'jdbc:sqlserver://mssql:1433;databaseName=MSSQL_DATABASE;encrypt=false'
 MSSQL_PROPS = {
     'user':   'sa',
-    'password': 'RidesP@123',
+    'password': 'your_password_for_mssql',
     'driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
 }
 
