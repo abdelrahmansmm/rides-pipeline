@@ -209,7 +209,7 @@ com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11 \
 Open Power BI Desktop
 → Get Data → SQL Server
 → Server: localhost,1433
-→ Database: RidesHailingDW
+→ Database: MSSQL_DATABASE
 → Load: gold.fct_trips, gold.dim_drivers, dbo.streaming_trip_agg
 ```
 ---
