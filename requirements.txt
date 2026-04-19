@@ -1,0 +1,15 @@
+psycopg2-binary==2.9.9
+pymongo==4.6.3
+pyodbc==5.1.0
+pandas==2.2.2
+pyarrow==16.1.0
+faker==25.2.0
+kafka-python==2.0.2
+dbt-core==1.8.9
+dbt-sqlserver==1.8.7
+
+# ── Airflow (runs inside Docker - not needed locally) ────
+# apache-airflow==2.9.2
+
+# ── PySpark (runs inside Docker - not needed locally) ────
+# pyspark==3.5.1

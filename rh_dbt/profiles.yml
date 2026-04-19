@@ -1,0 +1,27 @@
+rh_dbt:
+  outputs:
+    dev:
+      database: RidesHailingDW
+      schema: dbo
+      host: mssql
+      password: RidesP@123
+      port: 1433
+      threads: 4
+      type: sqlserver
+      driver: 'ODBC Driver 18 for SQL Server'
+      user: sa
+      encrypt: false
+      trust_cert: true
+  target: dev
+traffic_dbt:
+  outputs:
+    dev:
+      dbname: traffic_db
+      host: localhost
+      password: traffic
+      port: 5432
+      schema: public
+      threads: 1
+      type: postgres
+      user: traffic
+  target: dev

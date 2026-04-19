@@ -1,0 +1,187 @@
+volumes:
+  postgres_data:
+  mssql_data:
+  airflow_logs:
+  airflow_dags:
+  kafka_data:
+  zookeeper_data:
+
+networks:
+  pipeline_net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15.6-alpine
+    container_name: rp_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=rh_user
+      - POSTGRES_PASSWORD=rh_pass
+      - POSTGRES_DB=rides_hailing
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    networks: [pipeline_net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rh_user -d rides_hailing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  mongo:
+    image: mongo:7.0.5
+    container_name: rp_mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=payments
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./mongo_data:/data/db
+    command: mongod --noauth
+    networks: [pipeline_net]
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04
+    container_name: rp_mssql
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=RidesP@123
+      - MSSQL_PID=Developer
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks: [pipeline_net]
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/1433' && echo 'Port open'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: rp_zookeeper
+    restart: unless-stopped
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks: [pipeline_net]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: rp_kafka
+    restart: unless-stopped
+    depends_on: [zookeeper]
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_LOG_RETENTION_HOURS=48
+    ports:
+      - '29092:29092'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks: [pipeline_net]
+
+  airflow-init:
+    image: apache/airflow:2.9.2-python3.11
+    container_name: rp_airflow_init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    command: bash -c 'airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@ridehailing.eg'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow_logs:/opt/airflow/logs
+      - ./rh_dbt:/opt/airflow/rh_dbt
+    networks: [pipeline_net]
+
+  airflow-webserver:
+    image: apache/airflow:2.9.2-python3.11
+    container_name: rp_airflow_web
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
+      - airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - _PIP_ADDITIONAL_REQUIREMENTS=pymongo==4.7.1 pyodbc==5.1.0 pandas==2.2.2 psycopg2-binary==2.9.9 kafka-python==2.0.2 dbt-sqlserver==1.8.7 dbt-core==1.8.9
+    command: webserver
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow_logs:/opt/airflow/logs
+      - ./rh_dbt:/opt/airflow/rh_dbt
+    networks: [pipeline_net]
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.2-python3.11
+    container_name: rp_airflow_scheduler
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://rh_user:rh_pass@postgres/airflow_meta
+      - AIRFLOW__WEBSERVER__SECRET_KEY=ABCDEFGHIJ123456789
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - _PIP_ADDITIONAL_REQUIREMENTS=pymongo==4.7.1 pyodbc==5.1.0 pandas==2.2.2 psycopg2-binary==2.9.9 kafka-python==2.0.2 dbt-sqlserver==1.8.7 dbt-core==1.8.9
+    command: scheduler
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - airflow_logs:/opt/airflow/logs
+      - ./rh_dbt:/opt/airflow/rh_dbt
+    networks: [pipeline_net]
+      
+  spark-master:
+    image: apache/spark:3.5.1
+    container_name: rp_spark_master
+    restart: unless-stopped
+    user: root
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    command: /opt/spark/sbin/start-master.sh
+    ports:
+      - '8181:8080'
+      - '7077:7077'
+    volumes:
+      - ./spark:/opt/spark/work-dir
+    networks: [pipeline_net]
+
+  spark-worker:
+    image: apache/spark:3.5.1
+    container_name: rp_spark_worker
+    restart: unless-stopped
+    user: root
+    depends_on: [spark-master]
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    command: /opt/spark/sbin/start-worker.sh spark://spark-master:7077
+    volumes:
+      - ./spark:/opt/spark/work-dir
+    networks: [pipeline_net]

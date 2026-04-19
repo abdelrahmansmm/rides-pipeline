@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Environment variables (NEVER commit)
+.env
+
+# dbt
+rh_dbt/target/
+rh_dbt/logs/
+rh_dbt/dbt_packages/
+
+# Logs
+logs/
+*.log
+nohup.out
+
+# MongoDB local data
+mongo_data/
+
+# Spark checkpoints
+spark_checkpoint/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Power BI (binary file - optional to include)
+*.pbix

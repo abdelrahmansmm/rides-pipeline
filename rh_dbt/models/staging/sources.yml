@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: staging
+    schema: staging
+    database: RidesHailingDW
+    tables:
+      - name: stg_trips
+      - name: stg_drivers
+      - name: stg_payments
